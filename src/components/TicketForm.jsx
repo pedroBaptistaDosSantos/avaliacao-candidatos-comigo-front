@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
+import { authService } from '../services/auth';
 
 const TicketForm = () => {
   const [ticket, setTicket] = useState({
     title: '',
     description: '',
-    priority: 'medium',
+    priority: 'MEDIUM', // Padrão em maiúsculo
+    category: 'Sistema', // Valor padrão
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleChange = (e) => {
     setTicket({
@@ -29,37 +32,53 @@ const TicketForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSuccessMessage('');
     
     if (!validateForm()) return;
     
     setSubmitting(true);
     
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3001/api/tickets', {
+      const token = authService.getToken();
+      const user = authService.getUser();
+      
+      // Dados no formato exigido pela API
+      const ticketData = {
+        title: ticket.title,
+        description: ticket.description,
+        priority: ticket.priority.toUpperCase(), // Garante maiúsculo
+        category: ticket.category,
+        userId: user.id, // Pega o ID do usuário logado
+        status: 'OPEN' // Status padrão
+      };
+
+      console.log('Enviando ticket:', ticketData);
+
+      const response = await fetch('http://localhost:3000/api/tickets', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(ticket),
+        body: JSON.stringify(ticketData),
       });
+
+      const responseData = await response.json();
 
       if (response.ok) {
         // Limpar formulário
         setTicket({
           title: '',
           description: '',
-          priority: 'medium',
+          priority: 'MEDIUM',
+          category: 'Sistema'
         });
-        alert('Ticket criado com sucesso!');
-      } else if (response.status === 401) {
-        alert('Sessão expirada. Faça login novamente.');
+        setSuccessMessage('Ticket criado com sucesso!');
       } else {
-        alert('Erro ao criar ticket');
+        throw new Error(responseData.message || 'Erro ao criar ticket');
       }
     } catch (error) {
-      alert('Erro ao conectar com o servidor');
+      setErrors({ submit: error.message });
     } finally {
       setSubmitting(false);
     }
@@ -68,6 +87,19 @@ const TicketForm = () => {
   return (
     <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Criar Novo Ticket</h2>
+      
+      {successMessage && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+          {successMessage}
+        </div>
+      )}
+      
+      {errors.submit && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {errors.submit}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
@@ -101,9 +133,28 @@ const TicketForm = () => {
           {errors.description && <p className="text-red-500 text-xs italic mt-1">{errors.description}</p>}
         </div>
 
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="category">
+            Categoria *
+          </label>
+          <select
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="category"
+            name="category"
+            value={ticket.category}
+            onChange={handleChange}
+          >
+            <option value="Sistema">Sistema</option>
+            <option value="Hardware">Hardware</option>
+            <option value="Software">Software</option>
+            <option value="Rede">Rede</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+
         <div className="mb-6">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="priority">
-            Prioridade
+            Prioridade *
           </label>
           <select
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -112,9 +163,9 @@ const TicketForm = () => {
             value={ticket.priority}
             onChange={handleChange}
           >
-            <option value="low">Baixa</option>
-            <option value="medium">Média</option>
-            <option value="high">Alta</option>
+            <option value="LOW">Baixa</option>
+            <option value="MEDIUM">Média</option>
+            <option value="HIGH">Alta</option>
           </select>
         </div>
 

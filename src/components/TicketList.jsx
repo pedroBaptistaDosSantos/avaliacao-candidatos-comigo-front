@@ -25,12 +25,12 @@ const TicketList = ({ userRole }) => {
       if (response.ok) {
         const data = await response.json();
         console.log('Dados recebidos da API:', data);
-        
+
         // Ajuste conforme a estrutura da sua API
         // Se a API retornar { data: { tickets: [...] } }
         const ticketsData = data.data?.tickets || data.data || data;
         setTickets(Array.isArray(ticketsData) ? ticketsData : []);
-        
+
       } else if (response.status === 401) {
         setError('Sessão expirada. Redirecionando para login...');
         setTimeout(() => {
@@ -118,7 +118,7 @@ const TicketList = ({ userRole }) => {
       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
         <div className="flex justify-between items-center">
           <span>{error}</span>
-          <button 
+          <button
             onClick={refreshTickets}
             className="bg-red-600 text-white px-3 py-1 rounded text-sm"
           >
@@ -143,7 +143,7 @@ const TicketList = ({ userRole }) => {
           Atualizar
         </button>
       </div>
-      
+
       {tickets.length === 0 ? (
         <div className="bg-white shadow rounded-lg p-8 text-center">
           <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,7 +189,7 @@ const TicketList = ({ userRole }) => {
                     </td>
                     <td className="px-6 py-4 text-sm font-medium">
                       <div className="flex space-x-2">
-                        <button 
+                        <button
                           className="text-blue-600 hover:text-blue-900 transition-colors"
                           title="Ver detalhes"
                         >
@@ -198,7 +198,7 @@ const TicketList = ({ userRole }) => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
                         </button>
-                        <button 
+                        <button
                           className="text-green-600 hover:text-green-900 transition-colors"
                           title="Editar ticket"
                         >
@@ -206,8 +206,8 @@ const TicketList = ({ userRole }) => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
                         </button>
-                        {(userRole === 'admin' || userRole === 'manager' || userRole === 'ATTENDANT') && (
-                          <button 
+                        {(userRole === 'ADMIN') && (
+                          <button
                             className="text-red-600 hover:text-red-900 transition-colors"
                             onClick={() => handleDelete(ticket.id)}
                             title="Excluir ticket"
